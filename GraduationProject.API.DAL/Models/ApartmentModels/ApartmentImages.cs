@@ -8,16 +8,10 @@ namespace GraduationProject.API.DAL.Models.ApartmentModels
         public int Id { get; set; }
 
         [Required]
-        public string Url { get; set; }
+        public string Name { get; set; }
 
         [Required]
         public int ApartmentId { get; set; }
         public Apartment Apartment { get; set; }
-
-        //public static ApartmentImages create(string url)
-        //{
-        //    var x =
-        //}
-
     }
 }

@@ -7,7 +7,8 @@ namespace GraduationProject.API.PL.DTOs.DepartmentDTOs
 	public class DepartmentDTO
 	{
 		public int Id { get; set; }
+
+		[Required(ErrorMessage ="DepartmentName is required")]
 		public string Name { get; set; }
-		//public List<ApplicationUserDTO> ApplicationUsers { get; set; }
 	}
 }

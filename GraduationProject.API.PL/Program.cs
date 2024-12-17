@@ -33,7 +33,7 @@ builder.Services.AddScoped<IApartmentImageRepository, ApartmentImageRepository>(
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
 
-builder.Services.AddAutoMapper(typeof(Applicationprofile));
+builder.Services.AddAutoMapper(M => M.AddProfile(new Applicationprofile(builder.Configuration)));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

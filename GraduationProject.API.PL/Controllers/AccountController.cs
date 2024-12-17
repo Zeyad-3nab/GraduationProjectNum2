@@ -157,7 +157,39 @@ namespace GraduationProject.API.PL.Controllers
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(applicationUser, $"{registerDTO.Role}");
-                    return Ok(result);
+                    var claims = new List<Claim>();
+
+                    //claims.Add(new Claim("tokenNo", "75"));
+                    claims.Add(new Claim(ClaimTypes.Name, applicationUser.UserName));
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, applicationUser.Id));
+                    claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+
+                    var roles = await userManager.GetRolesAsync(applicationUser);
+                    foreach (var item in roles)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, item.ToString()));
+                    }
+
+
+                    //SigningCradiential
+
+                    var Key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]));
+                    var SigningCradiential = new SigningCredentials(Key, SecurityAlgorithms.HmacSha256);
+
+
+                    var token = new JwtSecurityToken(
+                        claims: claims,
+                        issuer: configuration["JWT:Issuer"],
+                        audience: configuration["JWT:Audience"],
+                        expires: DateTime.Now.AddMonths(1),
+                        signingCredentials: SigningCradiential
+                        );
+                    var _token = new
+                    {
+                        token = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo
+                    };
+                    return Ok(_token);
                 }
                 else
                 {

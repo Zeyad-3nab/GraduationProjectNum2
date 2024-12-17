@@ -26,22 +26,25 @@ namespace GraduationProject.API.PL.Controllers
             this.env = env;
             this.apartmentRepository = apartmentRepository;
         }
+
+
+
 		[ProducesResponseType(typeof(ApartmentImagesDTO), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
 		[HttpGet("GetAllOfApartment/{ApartmentId:int}")]
         public async Task<ActionResult> GetAllImageOfApartment([FromRoute]int ApartmentId) 
         {
 
-            var Images=await apartmentImageRepository.GetAllOfIpartmentAsync(ApartmentId);
-            foreach (var Image in Images) 
-            {
-                Image.Url= env.ContentRootFileProvider.GetFileInfo($"ApartmentImages/{Image.Url}")?.PhysicalPath;
-            }
+            var Images = mapper.Map<IEnumerable<ApartmentImagesDTO>>(await apartmentImageRepository.GetAllOfIpartmentAsync(ApartmentId));
             if (Images is not null)
                 return Ok(Images);
 
-			return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest));
-		}
+            return BadRequest("Empty");
+        }
+
+
+
+
 
 		[ProducesResponseType(typeof(ApartmentImagesDTO), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -53,13 +56,20 @@ namespace GraduationProject.API.PL.Controllers
             if (Image is not null) 
             {
                 int count =await apartmentImageRepository.DeleteAsync(Image);
-                if(count>0)
+                if (count > 0)
+                {
+                    DocumentSettings.Delete(Image.Name, "ApartmentImages");
                     return Ok();
+                }
+                
 
 				return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest));
 			}
 			return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound));
 		}
+
+
+
 
 		[ProducesResponseType(typeof(ApartmentImagesDTO), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -74,7 +84,7 @@ namespace GraduationProject.API.PL.Controllers
                 {
                     if (apartmentImages.image is not null)
                     {
-                        apartmentImages.Url = DocumentSettings.Upload(apartmentImages.image, "ApartmentImages");
+                        apartmentImages.Name = DocumentSettings.Upload(apartmentImages.image, "ApartmentImages");
                     }
 
                     var Images = mapper.Map<ApartmentImages>(apartmentImages);
@@ -92,6 +102,8 @@ namespace GraduationProject.API.PL.Controllers
 		}
 
 
+
+
 		[ProducesResponseType(typeof(ApartmentImagesDTO), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -101,9 +113,16 @@ namespace GraduationProject.API.PL.Controllers
             var apartment = await apartmentRepository.GetAsync(ApartmentId);
             if (apartment is not null)
             {
+                var images = await apartmentImageRepository.GetAllOfIpartmentAsync(ApartmentId);
                 var count = await apartmentImageRepository.DeleteAllOfIpartmentAsync(ApartmentId);
                 if (count > 0)
+                {
+                    foreach (var image in images)
+                    {
+                        DocumentSettings.Delete(image.Name, "ApartmentImages");
+                    }
                     return Ok();
+                }
 				return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest));
 			}
 			return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound));
@@ -120,7 +139,7 @@ namespace GraduationProject.API.PL.Controllers
             var image =await apartmentImageRepository.GetAsync(ImageId);
             if(image is not null) 
             {
-                var file = env.ContentRootFileProvider.GetFileInfo($"ApartmentImages/{image.Url}")?.PhysicalPath;
+                var file = env.ContentRootFileProvider.GetFileInfo($"ApartmentImages/{image.Name}")?.PhysicalPath;
                 if (file is not null)
                     return Ok(file);
 

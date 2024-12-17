@@ -5,15 +5,16 @@ namespace GraduationProject.API.PL.DTOs.ApartmentsDTO
 {
     public class ApartmentImagesDTO
     {
-        [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage ="URL is required")]
-        public string Url { get; set; }
+        [Required(ErrorMessage = "Name is required")]
+        public string Name { get; set; } 
+
+        [Required(ErrorMessage ="Image is required")]
         public IFormFile image { get; set; }
 
 
-        [Required]
+        [Required(ErrorMessage ="ApartmentId is required")]
         public int ApartmentId { get; set; }
     }
 }

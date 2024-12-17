@@ -11,6 +11,6 @@ namespace GraduationProject.API.BLL.Interfaces
     {
         public Task<IEnumerable<Apartment>> GetAllWithUserAsync(string id);
 
-        public Task<IEnumerable<Apartment>> Search(string temp);
+        public  Task<IEnumerable<Apartment>> Search(string? temp, double? MinPrice, double? MaxPrice, double? Distance);
     }
 }

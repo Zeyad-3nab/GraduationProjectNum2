@@ -32,8 +32,8 @@ namespace GraduationProject.API.PL.DTOs.ApplicationUserDTOs
         public string PhoneNumber { get; set; } = null!;
 
 
-        [Required]
-        public string WhatsappNumber { get; set; }
+        [Required(ErrorMessage = "WhatsappNumber is Required")]
+        public string WhatsappNumber { get; set; }=null!;
 
 
         public string? WebsiteURL { get; set; }

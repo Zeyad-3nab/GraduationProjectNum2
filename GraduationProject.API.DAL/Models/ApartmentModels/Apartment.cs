@@ -7,13 +7,6 @@ namespace GraduationProject.API.DAL.Models.ApartmentModels
 {
     public class Apartment:BaseEntity
     {
-        //public Apartment()
-        //{
-        //    Id = Guid.NewGuid();
-        //}
-
-
-        public string Governorate { get; set; }
         [Required]
         public string City { get; set; }
         public string? Village { get; set; }
@@ -38,8 +31,9 @@ namespace GraduationProject.API.DAL.Models.ApartmentModels
         [Required]
         public double DistanceByMeters { get; set; }
 
-        //Flag
-        //Time
+        [Required]
+        public bool IsRent { get; set; }
+        public DateTime DateOfCreation { get; set; } = DateTime.Now;
 
         [Required]
         public string UserId { get; set; }

@@ -19,7 +19,7 @@ namespace GraduationProject.API.PL.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IWebHostEnvironment webHostEnvironment;
 
-        public ApartmentController(IApartmentRepository apartmentRepository , IMapper mapper  , UserManager<ApplicationUser> userManager , IWebHostEnvironment webHostEnvironment)
+        public ApartmentController(IApartmentRepository apartmentRepository , IMapper mapper  , UserManager<ApplicationUser> userManager , IWebHostEnvironment webHostEnvironment )
         {
             this.apartmentRepository = apartmentRepository;
             this.mapper = mapper;
@@ -29,17 +29,7 @@ namespace GraduationProject.API.PL.Controllers
 
         //Get All Apartments
         [HttpGet]
-        public async Task<ActionResult> GetAll() 
-        {
-
-            var result = mapper.Map<IEnumerable<ApartmentDTO>>(await apartmentRepository.GetAllAsync());  //Auto mapper from list of apartment to list of apartmentDTO
-
-           // var path = webHostEnvironment.WebRootPath + "/ApartmentImages/589a79f5-3348-4349-ba23-40bffe799606about_chef.jpg";
-
-            return Ok(result);
-        }
-
-        //
+        public async Task<ActionResult> GetAll() => Ok(mapper.Map<IEnumerable<ApartmentDTO>>(await apartmentRepository.GetAllAsync()));
 
         //----------------------------------------------------------GetById------------------------------------------------------------------------
         //Get By Id
@@ -47,22 +37,18 @@ namespace GraduationProject.API.PL.Controllers
         public async Task<ActionResult> Get([FromRoute] int id)
         {
             var result = mapper.Map<ApartmentDTO>(await apartmentRepository.GetAsync(id));    //Auto mapper from apartment to apartmentDTO
+            if (result is not null)
+                return Ok(result);
 
-
-            return Ok(result);
+            return NotFound();
         }
 
 
 
         //----------------------------------------------------------Search-------------------------------------------------------------------------
-        // Search in City and Village and government
+        // Search in City and Village
         [HttpGet("Search({SearchInput:alpha})")]
-        public async Task<ActionResult> Search([FromRoute] string SearchInput)
-        {
-            var result = mapper.Map<IEnumerable<ApartmentDTO>>(await apartmentRepository.Search(SearchInput));   //Auto mapper from list of apartment to list of apartmentDTO
-
-            return Ok(result);
-        }
+        public async Task<ActionResult> Search([FromRoute] string SearchInput) => Ok(mapper.Map<IEnumerable<ApartmentDTO>>(await apartmentRepository.Search(SearchInput)));
 
 
 
@@ -77,13 +63,14 @@ namespace GraduationProject.API.PL.Controllers
             if (ModelState.IsValid) 
             {
                 
-                if (apartmentDTO.BaseImage is not null) 
+                if (apartmentDTO.BaseImageUrl is not null) 
                 {
-                    apartmentDTO.BaseImage = DocumentSettings.Upload(apartmentDTO.Image , "ApartmentImages");   //add image of apartment in wwwroot
+                    apartmentDTO.BaseImageUrl = DocumentSettings.Upload(apartmentDTO.Image , "ApartmentImages");   //add image of apartment in wwwroot
                 }
+
                 apartmentDTO.DistanceByMeters = CalcDistance.CalculateDistance(apartmentDTO.address_Lat,apartmentDTO.address_Lon);
 
-            var apartment = mapper.Map<Apartment>(apartmentDTO);    //Auto mapper from apartmentDTO to apartment
+               var apartment = mapper.Map<Apartment>(apartmentDTO);    //Auto mapper from apartmentDTO to apartment
 
                 apartment.UserId = userManager.GetUserId(User);   //From SignInManager
 
@@ -113,12 +100,12 @@ namespace GraduationProject.API.PL.Controllers
         {
             if (ModelState.IsValid) 
             {
-                if (apartmentDTO.BaseImage is not null)
-                    DocumentSettings.Delete(apartmentDTO.BaseImage, "ApartmentImages");
+                if (apartmentDTO.BaseImageUrl is not null)
+                    DocumentSettings.Delete(apartmentDTO.BaseImageUrl, "ApartmentImages");
 
 
                 if (apartmentDTO.Image is not null)
-                    apartmentDTO.BaseImage = DocumentSettings.Upload(apartmentDTO.Image, "ApartmentImages");   // خزن الصوره وهات اسمها
+                    apartmentDTO.BaseImageUrl = DocumentSettings.Upload(apartmentDTO.Image, "ApartmentImages");   // خزن الصوره وهات اسمها
 
 
                 apartmentDTO.DistanceByMeters=CalcDistance.CalculateDistance(apartmentDTO.address_Lat,apartmentDTO.address_Lon);   //حساب المسافه 

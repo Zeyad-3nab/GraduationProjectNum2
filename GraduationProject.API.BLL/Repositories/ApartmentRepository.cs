@@ -22,8 +22,6 @@ namespace GraduationProject.API.BLL.Repositories
         public async Task<IEnumerable<Apartment>> GetAllAsync() => await context.Apartments.ToListAsync();
 
         public async Task<Apartment> GetAsync(int id) => await context.Apartments.FindAsync(id);
-
-        //public async Task<IEnumerable<Apartment>> GetAllWithUserAsync(string id) => await context.Apartments.Where(e => e.UserId == id).ToListAsync();
         public async Task<IEnumerable<Apartment>> GetAllWithUserAsync(string id) => await context.Apartments.Where(e => e.UserId == id).ToListAsync();
 
         public async Task<int> AddAsync(Apartment entity)
@@ -44,9 +42,28 @@ namespace GraduationProject.API.BLL.Repositories
             context.Apartments.Remove(entity);
             return await context.SaveChangesAsync();
         }
-        public async Task<IEnumerable<Apartment>> Search(string temp)
+        public async Task<IEnumerable<Apartment>> Search(string? temp , double? MinPrice ,double? MaxPrice , double? Distance )
         {
-            var result = await context.Apartments.Where(e => e.City.Contains(temp) || e.Village.Contains(temp) || e.Governorate.Contains(temp)).ToListAsync();
+            var result = await context.Apartments.ToListAsync();
+
+            if(temp is not null) 
+            {
+                result = result.Where(e => e.City.Contains(temp) || e.Village.Contains(temp)).ToList();
+            }
+            if (MinPrice != 0) 
+            {
+                result=result.Where(e=>e.Price>=MinPrice).ToList();
+            }
+            if (MaxPrice != 0)
+            {
+                result = result.Where(e => e.Price <= MaxPrice).ToList();
+            }
+
+            if (Distance != 0)
+            {
+                result = result.Where(e => e.DistanceByMeters <=Distance).ToList();
+            }
+
             return result;
         }
 

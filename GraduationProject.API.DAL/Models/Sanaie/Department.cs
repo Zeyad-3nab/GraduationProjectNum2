@@ -11,6 +11,7 @@ namespace GraduationProject.API.DAL.Models.Sanaie
 {
     public class Department:BaseEntity
     {
+        [Required]
         public string Name { get; set; }
 
         //Location

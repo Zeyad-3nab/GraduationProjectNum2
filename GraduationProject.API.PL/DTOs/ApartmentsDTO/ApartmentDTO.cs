@@ -1,4 +1,5 @@
 ﻿using GraduationProject.API.DAL.Models.ApartmentModels;
+using GraduationProject.API.DAL.Models.IdentityModels;
 using System.ComponentModel.DataAnnotations;
 
 namespace GraduationProject.API.PL.DTOs.ApartmentsDTO
@@ -7,39 +8,53 @@ namespace GraduationProject.API.PL.DTOs.ApartmentsDTO
     {
         [Key]
         public int Id { get; set; }
-        public string? Governorate { get; set; }
-        public string? City { get; set; }
+
+        [Required(ErrorMessage = "City is required")]
+        public string City { get; set; }
         public string? Village { get; set; }
 
 
 
-        [Required]
+        [Required(ErrorMessage = "Location is required")]
         [DataType(DataType.Url)]
         public string Location { get; set; }
 
 
 
-        [Required]
-        public string Price { get; set; }
+        [Required(ErrorMessage = "Price is required")]
+        public double Price { get; set; }
 
-        [DataType(DataType.Currency)]
-        public string Curency { get; set; }
 
-        public IFormFile Image { get; set; } = null!;
-        public string BaseImage { get; set; } = null!;
+        [Required(ErrorMessage ="Image is required")]
+        public IFormFile Image { get; set; }
 
-        [Required]
+        public string BaseImageUrl { get; set; } = null!;
+
+        [Required(ErrorMessage ="Type is required")]
         public ApartmentType Type { get; set; }
 
 
-        [Required]
+        [Required(ErrorMessage = "address lat is required")]
         public double address_Lat { get; set; }
 
 
-        [Required]
+        [Required(ErrorMessage = "address lon is required")]
         public double address_Lon { get; set; }
 
+
+        [Required(ErrorMessage = "NumberOfRooms is required")]
+        public int NumOfRooms { get; set; }
+
         public double? DistanceByMeters { get; set; }
-        public string? UserId { get; set; }
+
+        [Required(ErrorMessage ="Is Rent is required")]
+        public bool IsRent { get; set; }
+
+        [Required(ErrorMessage ="UserId is required")]
+        public string UserId { get; set; }
+
+       
+      
+
     }
 }
