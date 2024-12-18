@@ -327,5 +327,20 @@ namespace GraduationProject.API.PL.Controllers
             return NotFound("Not Found");
         }
 
+        [HttpPost("AddToRole")]
+        public async Task<IActionResult> AddToRole(string Email, string role) 
+        {
+            var user = await userManager.FindByEmailAsync(Email);
+            if(user is not null) 
+            {
+                var result=await userManager.AddToRoleAsync(user, role);
+                if(result.Succeeded)
+                    return Ok(result);
+
+                return BadRequest(result.Errors);
+            }
+            return NotFound(Email);
+        }
+
     }
 }

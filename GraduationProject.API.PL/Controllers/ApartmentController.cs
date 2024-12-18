@@ -48,7 +48,7 @@ namespace GraduationProject.API.PL.Controllers
         //----------------------------------------------------------Search-------------------------------------------------------------------------
         // Search in City and Village
         [HttpGet("Search({SearchInput:alpha})")]
-        public async Task<ActionResult> Search([FromRoute] string SearchInput) => Ok(mapper.Map<IEnumerable<ApartmentDTO>>(await apartmentRepository.Search(SearchInput)));
+        public async Task<ActionResult> Search([FromRoute] string? SearchInput , double? MinPrice , double? MaxPrice , double? Distance ) => Ok(mapper.Map<IEnumerable<ApartmentDTO>>(await apartmentRepository.Search(SearchInput , MinPrice , MaxPrice , Distance)));
 
 
 

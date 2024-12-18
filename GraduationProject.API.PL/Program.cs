@@ -95,11 +95,11 @@ catch (Exception ex)
 
    #region Configure 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
 	app.UseSwagger();
 	app.UseSwaggerUI();
-}
+//}
 app.UseStatusCodePagesWithReExecute("/error/{0}"); //تانيه end point ل Redirect هتروح تعمل <= StatusCode بحجز مكان ل
 
 app.UseStaticFiles();
