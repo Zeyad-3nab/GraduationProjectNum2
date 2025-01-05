@@ -8,11 +8,25 @@ using GraduationProject.API.PL.Mapping;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
 
-    #region Dependancy
+
+//Allow all people
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.AllowAnyOrigin();
+                          policy.AllowAnyMethod();
+                          policy.AllowAnyHeader();
+                      });
+});
+
+
+#region Dependancy
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -24,8 +38,12 @@ builder.Services.AddDbContext<ApplicationDbContext>
 	);
 
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(Options => Options.SignIn.RequireConfirmedAccount = false)
-			  .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(Options => {
+	Options.User.RequireUniqueEmail=true;
+	Options.SignIn.RequireConfirmedAccount = false;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()  
+.AddDefaultTokenProviders();
 
 
 builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
@@ -105,6 +123,8 @@ app.UseStatusCodePagesWithReExecute("/error/{0}"); //تانيه end point ل Red
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthorization();
 

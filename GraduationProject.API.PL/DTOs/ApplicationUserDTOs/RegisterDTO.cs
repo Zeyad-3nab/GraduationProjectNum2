@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using GraduationProject.API.DAL.Data.Migrations;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace GraduationProject.API.PL.DTOs.ApplicationUserDTOs
 {
@@ -13,13 +15,12 @@ namespace GraduationProject.API.PL.DTOs.ApplicationUserDTOs
 
         [MaxLength(60)]
         [Required(ErrorMessage = "UserName is required")]
-        public string UserName { get; set; } = null!;
-
+        public string UserName { get; set; }
 
         [MaxLength(100)]
         [DataType(DataType.EmailAddress)]
         [Required(ErrorMessage = "Email is required")]
-        public string Email { get; set; } = null!;
+        public string Email { get; set; } 
 
 
         [MaxLength(14)]
@@ -29,15 +30,13 @@ namespace GraduationProject.API.PL.DTOs.ApplicationUserDTOs
 
 
         [Required(ErrorMessage = "PhoneNumber is Required")]
-        public string PhoneNumber { get; set; } = null!;
+        public string PhoneNumber { get; set; } 
 
 
         [Required(ErrorMessage = "WhatsappNumber is Required")]
-        public string WhatsappNumber { get; set; }=null!;
-
-
+        
+        public string WhatsappNumber { get; set; }
         public string? WebsiteURL { get; set; }
-
 
         [DataType(DataType.Password)]
         [Required(ErrorMessage = "Password is required")]

@@ -3,9 +3,10 @@
 	public class ApiErrorResponse
 	{
 	    // Response دي الطريقه اللي بنهندل بيها عشان نوحد بيها شكل ال
+		
 	    public int StatusCode { get; set; }
 	    public string? Message { get; set; }
-	    public ApiErrorResponse(int statusCode, string? message = null)
+		public ApiErrorResponse(int statusCode, string? message = null)
 	    {
 	    	StatusCode = statusCode;
 	    	Message = message ?? GetDefaultMessageForStatusCode(statusCode); //GetDefaultMessageForStatusCode هنا بقوله لو مفيش رساله جاتلك اعمل جنيريت للميثود دي

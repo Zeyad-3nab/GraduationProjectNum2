@@ -46,6 +46,7 @@ namespace GraduationProject.API.DAL.Data.Contexts
                 .WithOne(ai => ai.Apartment)
                 .HasForeignKey(ai => ai.ApartmentId)
                 .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }
