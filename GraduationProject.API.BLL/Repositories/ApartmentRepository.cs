@@ -22,7 +22,11 @@ namespace GraduationProject.API.BLL.Repositories
         public async Task<IEnumerable<Apartment>> GetAllAsync() => await context.Apartments.ToListAsync();
 
         public async Task<Apartment> GetAsync(int id) => await context.Apartments.FindAsync(id);
+
+
         public async Task<IEnumerable<Apartment>> GetAllWithUserAsync(string id) => await context.Apartments.Where(e => e.UserId == id).ToListAsync();
+
+
 
         public async Task<int> AddAsync(Apartment entity)
         {

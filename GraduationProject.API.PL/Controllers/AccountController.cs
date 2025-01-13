@@ -25,7 +25,7 @@ namespace GraduationProject.API.PL.Controllers
         private readonly IConfiguration configuration;
         private readonly SignInManager<ApplicationUser> signInManager;
 
-        public AccountController(UserManager<ApplicationUser> userManager , IConfiguration configuration , SignInManager<ApplicationUser> signInManager)
+        public AccountController(UserManager<ApplicationUser> userManager ,  IConfiguration configuration , SignInManager<ApplicationUser> signInManager)
         {
             this.userManager = userManager;
             this.configuration = configuration;
@@ -359,11 +359,12 @@ namespace GraduationProject.API.PL.Controllers
                 var user = await userManager.FindByEmailAsync(Email);
                 if (user is not null)
                 {
-                    var result = await userManager.AddToRoleAsync(user, role);
+                    var result= await userManager.AddToRoleAsync(user, role);
                     if (result.Succeeded)
-                        return Ok(result);
+                        return Ok();
 
-                    return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, $"{result.Errors}"));
+                    else
+                        return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Role Not Found"));
                 }
                 return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Email Not Found"));
             }
