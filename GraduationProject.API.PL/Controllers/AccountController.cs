@@ -46,7 +46,7 @@ namespace GraduationProject.API.PL.Controllers
 
         [AllowAnonymous]
         [HttpGet("GetUserById")]
-        public async Task<ActionResult> GetUserById(string userId)
+        public async Task<ActionResult> GetUserById([FromBody] string userId)
         {
             if (ModelState.IsValid)
             {
@@ -126,13 +126,9 @@ namespace GraduationProject.API.PL.Controllers
 
 
 
-
-
-        [ProducesResponseType(typeof(RegisterDTO), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
         [HttpPost("Register")]
-        public async Task<ActionResult> Register(RegisterDTO registerDTO)
+        public async Task<ActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
             if (ModelState.IsValid)
             {
@@ -226,7 +222,7 @@ namespace GraduationProject.API.PL.Controllers
 
 
         [HttpPut("UpdateUser")]
-        public async Task<ActionResult> UpdateUser(RegisterDTO registerDTO)
+        public async Task<ActionResult> UpdateUser([FromBody]RegisterDTO registerDTO)
         {
             if (ModelState.IsValid)
             {
@@ -263,7 +259,7 @@ namespace GraduationProject.API.PL.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteUser")]
-        public async Task<ActionResult> DeleteUser(string id)
+        public async Task<ActionResult> DeleteUser([FromBody] string id)
         {
             if (ModelState.IsValid)
             {
@@ -284,7 +280,7 @@ namespace GraduationProject.API.PL.Controllers
 
 
         [HttpPost("SendEmail")]
-        public async Task<ActionResult> SendEmail([DataType(DataType.EmailAddress)] string Email)
+        public async Task<ActionResult> SendEmail([FromBody][DataType(DataType.EmailAddress)] string Email)
         {
             if (ModelState.IsValid)
             {
@@ -311,17 +307,17 @@ namespace GraduationProject.API.PL.Controllers
 
         [AllowAnonymous]
         [HttpPut("ChangePassword")]
-        public async Task<ActionResult> UpdatePassword(string password, string email)
+        public async Task<ActionResult> UpdatePassword([FromBody] UpdatePasswordDTO updatePasswordDTO)
         {
             if (ModelState.IsValid)
             {
-                var user = await userManager.FindByEmailAsync(email);
+                var user = await userManager.FindByEmailAsync(updatePasswordDTO.Email);
                 if (user is not null)
                 {
                     var result = await userManager.RemovePasswordAsync(user);
                     if (result.Succeeded)
                     {
-                        result = await userManager.AddPasswordAsync(user, password);
+                        result = await userManager.AddPasswordAsync(user, updatePasswordDTO.Password);
                         if (result.Succeeded)
                         {
                             return Ok("changed");
@@ -336,7 +332,7 @@ namespace GraduationProject.API.PL.Controllers
 
 
         [HttpGet("UserRoles")]
-        public async Task<ActionResult> GetUserRoles(string Email)
+        public async Task<ActionResult> GetUserRoles([FromBody]string Email)
         {
             if (ModelState.IsValid) 
             {
@@ -352,14 +348,14 @@ namespace GraduationProject.API.PL.Controllers
         }
 
         [HttpPost("AddToRole")]
-        public async Task<IActionResult> AddToRole(string Email, string role)
+        public async Task<IActionResult> AddToRole([FromBody]AddToRoleDTO addToRoleDTO)
         {
             if (ModelState.IsValid) 
             {
-                var user = await userManager.FindByEmailAsync(Email);
+                var user = await userManager.FindByEmailAsync(addToRoleDTO.Email);
                 if (user is not null)
                 {
-                    var result= await userManager.AddToRoleAsync(user, role);
+                    var result= await userManager.AddToRoleAsync(user, addToRoleDTO.Role);
                     if (result.Succeeded)
                         return Ok();
 
