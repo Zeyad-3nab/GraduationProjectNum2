@@ -1,7 +1,12 @@
-﻿using GraduationProject.API.DAL.Data.Contexts;
+﻿using AutoMapper;
+using GraduationProject.API.DAL.Data.Contexts;
+using GraduationProject.API.DAL.Models.ApartmentModels;
 using GraduationProject.API.DAL.Models.IdentityModels;
+using GraduationProject.API.DAL.Models.Sanaie;
+using GraduationProject.API.PL.DTOs;
 using GraduationProject.API.PL.DTOs.ApartmentsDTO;
 using GraduationProject.API.PL.DTOs.ApplicationUserDTOs;
+using GraduationProject.API.PL.DTOs.DepartmentDTOs;
 using GraduationProject.API.PL.Errors;
 using GraduationProject.API.PL.Helper;
 using Microsoft.AspNetCore.Authorization;
@@ -9,9 +14,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 
@@ -24,12 +31,20 @@ namespace GraduationProject.API.PL.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IConfiguration configuration;
         private readonly SignInManager<ApplicationUser> signInManager;
+        private readonly IMapper mapper;
+        private readonly ApiResponse response;
 
-        public AccountController(UserManager<ApplicationUser> userManager ,  IConfiguration configuration , SignInManager<ApplicationUser> signInManager)
+        public AccountController(
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration ,
+            SignInManager<ApplicationUser> signInManager,
+            IMapper mapper)
         {
             this.userManager = userManager;
             this.configuration = configuration;
             this.signInManager = signInManager;
+            this.mapper = mapper;
+            response = new ApiResponse();
         }
 
 
@@ -46,7 +61,7 @@ namespace GraduationProject.API.PL.Controllers
 
         [AllowAnonymous]
         [HttpGet("GetUserById")]
-        public async Task<ActionResult> GetUserById([FromBody] string userId)
+        public async Task<ActionResult> GetUserById( string userId)
         {
             if (ModelState.IsValid)
             {
@@ -55,9 +70,19 @@ namespace GraduationProject.API.PL.Controllers
                 {
                     return Ok(user);
                 }
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Id Not Found"));
+
+                response.statusCode = HttpStatusCode.NotFound;
+                response.errors.Add("User with this Id Not Found.");
+                response.message = "a bad Request , You have made";
+                return NotFound(response);
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+
+            response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
         }
 
 
@@ -65,7 +90,7 @@ namespace GraduationProject.API.PL.Controllers
 
         [AllowAnonymous]
         [HttpPost("Login")]
-        public async Task<ActionResult> Login([FromBody] LoginDTO loginDTO)
+        public async Task<ActionResult> Login(LoginDTO loginDTO)
         {
             if (ModelState.IsValid)
             {
@@ -112,16 +137,26 @@ namespace GraduationProject.API.PL.Controllers
                     }
                     else
                     {
-                        return Unauthorized();
+                        response.statusCode = HttpStatusCode.BadRequest;
+                        response.errors.Add("Password with this email InCorrect");
+                        response.message = "a bad Request , You have made";
+                        return BadRequest(response);
                     }
                 }
                 else
                 {
-                    //ModelState.AddModelError($"{loginDTO.Email}", "Email not Found");
-                    return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound,"Email Not Found"));
+                    response.statusCode = HttpStatusCode.NotFound;
+                    response.errors.Add("User with this email NotFound.");
+                    response.message = "a bad Request , You have made";
+                    return BadRequest(response);
                 }
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+            response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
         }
 
 
@@ -132,55 +167,32 @@ namespace GraduationProject.API.PL.Controllers
         {
             if (ModelState.IsValid)
             {
-                ApplicationUser applicationUser = new ApplicationUser();
                 var user = await userManager.FindByEmailAsync(registerDTO.Email);
                 if (user is not null)
                 {
-                    return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Email Was Taken"));
-                }
-                if (registerDTO.DepartmentId is null || registerDTO.DepartmentId == 0)
-                {
-                    applicationUser = new ApplicationUser()
-                    {
-                        FirstName = registerDTO.FirstName,
-                        LastName = registerDTO.LastName,
-                        UserName = registerDTO.UserName,
-                        PhoneNumber = registerDTO.PhoneNumber,
-                        WhatsappNumber = registerDTO.WhatsappNumber,
-                        NationalId = registerDTO.NationalId,
-                        Email = registerDTO.Email,
-                        WebsiteURL = registerDTO.WebsiteURL,
-
-                    };
-                }
-                else
-                {
-                    applicationUser = new ApplicationUser()
-                    {
-                        FirstName = registerDTO.FirstName,
-                        LastName = registerDTO.LastName,
-                        UserName = registerDTO.UserName,
-                        PhoneNumber = registerDTO.PhoneNumber,
-                        WhatsappNumber = registerDTO.WhatsappNumber,
-                        NationalId = registerDTO.NationalId,
-                        Email = registerDTO.Email,
-                        WebsiteURL = registerDTO.WebsiteURL,
-                        DepartmentId = registerDTO.DepartmentId,
-                    };
+                    response.statusCode = HttpStatusCode.BadRequest;
+                    response.errors.Add("User with this email already exists.");
+                    response.message = "a bad Request , You have made";
+                    return BadRequest(response);
                 }
 
-                var result = await userManager.CreateAsync(applicationUser, registerDTO.Password);
+
+                var appUser = mapper.Map<ApplicationUser>(registerDTO);
+             
+                var result = await userManager.CreateAsync(appUser, registerDTO.Password);    //Create Account
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(applicationUser, $"{registerDTO.Role}");
-                    var claims = new List<Claim>();
+                    await userManager.AddToRoleAsync(appUser, $"{registerDTO.Role}");         //Add To Role
+
+
+                    var claims = new List<Claim>();                                         //Generate Token
 
                     //claims.Add(new Claim("tokenNo", "75"));
-                    claims.Add(new Claim(ClaimTypes.Name, applicationUser.UserName));
-                    claims.Add(new Claim(ClaimTypes.NameIdentifier, applicationUser.Id));
+                    claims.Add(new Claim(ClaimTypes.Name, appUser.UserName));
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, appUser.Id));
                     claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
 
-                    var roles = await userManager.GetRolesAsync(applicationUser);
+                    var roles = await userManager.GetRolesAsync(appUser);
                     foreach (var item in roles)
                     {
                         claims.Add(new Claim(ClaimTypes.Role, item.ToString()));
@@ -209,20 +221,30 @@ namespace GraduationProject.API.PL.Controllers
                 }
                 else
                 {
-                    foreach (var item in result.Errors)
+                    response.statusCode = HttpStatusCode.BadRequest;
+                    response.errors = new List<string>();
+
+                    foreach (var err in result.Errors) 
                     {
-                        ModelState.AddModelError("", item.Description);
+                       response.errors.Add(err.Description);
                     }
+                    response.message = "a bad Request , You have made";
+                    return BadRequest(response);
                 }
 
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+             response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
         }
 
 
 
         [HttpPut("UpdateUser")]
-        public async Task<ActionResult> UpdateUser([FromBody]RegisterDTO registerDTO)
+        public async Task<ActionResult> UpdateUser(RegisterDTO registerDTO)
         {
             if (ModelState.IsValid)
             {
@@ -230,14 +252,7 @@ namespace GraduationProject.API.PL.Controllers
 
                 if (user is not null)
                 {
-                    user.FirstName = registerDTO.FirstName;
-                    user.LastName = registerDTO.LastName;
-                    user.UserName = registerDTO.UserName;
-                    user.PhoneNumber = registerDTO.PhoneNumber;
-                    user.Email = registerDTO.Email;
-                    user.NationalId = registerDTO.NationalId;
-                    user.WhatsappNumber = registerDTO.WhatsappNumber;
-                    user.WebsiteURL = registerDTO.WebsiteURL;
+                    var appUser = mapper.Map<ApplicationUser>(registerDTO);
 
 
                     var result = await userManager.UpdateAsync(user);
@@ -245,21 +260,42 @@ namespace GraduationProject.API.PL.Controllers
                     {
                         return Ok("Updated");
                     }
-                    return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest,$"{result.Errors}"));
+                    else 
+                    {
+                        response.statusCode = HttpStatusCode.BadRequest;
+                        response.errors = new List<string>();
+
+                        foreach (var err in result.Errors)
+                        {
+                            response.errors.Add(err.Description);
+                        }
+                        response.message = "a bad Request , You have made";
+                        return BadRequest(response);
+                    }
+                   
 
                 }
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, $"Email Not Found"));
 
-
+                    response.statusCode = HttpStatusCode.BadRequest;
+                    response.errors.Add("");
+                    response.message = "a bad Request , You have made";
+                    return BadRequest(response);
+                
+               
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+            response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
 
         }
 
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteUser")]
-        public async Task<ActionResult> DeleteUser([FromBody] string id)
+        public async Task<ActionResult> DeleteUser(string id)
         {
             if (ModelState.IsValid)
             {
@@ -271,16 +307,33 @@ namespace GraduationProject.API.PL.Controllers
                     {
                         return Ok();
                     }
-                    return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, $"{result.Errors}"));
+                    response.statusCode = HttpStatusCode.BadRequest;
+                    response.errors = new List<string>();
+
+                    foreach (var err in result.Errors)
+                    {
+                        response.errors.Add(err.Description);
+                    }
+                    response.message = "a bad Request , You have made";
+                    return BadRequest(response);
                 }
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Id Not Found"));
+                response.statusCode = HttpStatusCode.NotFound;
+                response.errors.Add("User with this Id Not Found");
+                response.message = "a bad Request , You have made";
+                return NotFound(response);
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+
+            response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
         }
 
 
         [HttpPost("SendEmail")]
-        public async Task<ActionResult> SendEmail([FromBody][DataType(DataType.EmailAddress)] string Email)
+        public async Task<ActionResult> SendEmail([DataType(DataType.EmailAddress)] string Email)
         {
             if (ModelState.IsValid)
             {
@@ -299,15 +352,25 @@ namespace GraduationProject.API.PL.Controllers
                     EmailSettings.SendEmail(email);
                     return Ok(Code);
                 }
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Email Not Found"));
+
+                response.statusCode = HttpStatusCode.NotFound;
+                response.errors.Add("User with this email Not Found.");
+                response.message = "a bad Request , You have made";
+                return NotFound(response);
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+
+            response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
 
         }
 
         [AllowAnonymous]
         [HttpPut("ChangePassword")]
-        public async Task<ActionResult> UpdatePassword([FromBody] UpdatePasswordDTO updatePasswordDTO)
+        public async Task<ActionResult> UpdatePassword(UpdatePasswordDTO updatePasswordDTO)
         {
             if (ModelState.IsValid)
             {
@@ -323,11 +386,28 @@ namespace GraduationProject.API.PL.Controllers
                             return Ok("changed");
                         }
                     }
-                    return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, $"{result.Errors}"));
+
+                    response.statusCode = HttpStatusCode.BadRequest;
+                    foreach (var err in result.Errors)
+                    {
+                        response.errors.Add(err.Description);
+                    }
+                    response.message = "a bad Request , You have made";
+                    return BadRequest(response);
                 }
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, $"Email Not Found"));
+
+                response.statusCode = HttpStatusCode.BadRequest;
+                response.errors.Add("User with this email already exists.");
+                response.message = "a bad Request , You have made";
+                return BadRequest(response);
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+
+            response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
         }
 
 
@@ -342,10 +422,20 @@ namespace GraduationProject.API.PL.Controllers
                     var roles = await userManager.GetRolesAsync(user);
                     return Ok(roles);
                 }
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Email Not Found"));
+                response.statusCode = HttpStatusCode.NotFound;
+                response.errors.Add("User with this email Not Found .");
+                response.message = "a bad Request , You have made";
+                return NotFound(response);
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+            response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
         }
+
+
 
         [HttpPost("AddToRole")]
         public async Task<IActionResult> AddToRole([FromBody]AddToRoleDTO addToRoleDTO)
@@ -360,11 +450,27 @@ namespace GraduationProject.API.PL.Controllers
                         return Ok();
 
                     else
-                        return BadRequest(new ApiErrorResponse(StatusCodes.Status400BadRequest, "Role Not Found"));
+                        response.statusCode = HttpStatusCode.BadRequest;
+                    foreach (var err in result.Errors)
+                    {
+                        response.errors.Add(err.Description);
+                    }
+                    response.message = "a bad Request , You have made";
+                    return BadRequest(response);
                 }
-                return NotFound(new ApiErrorResponse(StatusCodes.Status404NotFound, "Email Not Found"));
+
+
+                response.statusCode = HttpStatusCode.NotFound;
+                response.errors.Add("User with this email Not Found .");
+                response.message = "a bad Request , You have made";
+                return NotFound(response);
             }
-            return BadRequest(new ApiErrorResponse(ModelState.ErrorCount));
+            response.statusCode = HttpStatusCode.BadRequest;
+            response.errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return BadRequest(response);
         }
 
     }

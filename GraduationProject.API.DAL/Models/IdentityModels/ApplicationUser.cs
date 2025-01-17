@@ -20,9 +20,7 @@ namespace GraduationProject.API.DAL.Models.IdentityModels
 
         public string? Photo { get; set; }
 
-        //unique
         public string WhatsappNumber { get; set; }
-        //unique
         public string? WebsiteURL { get; set; }
 
 
@@ -30,7 +28,6 @@ namespace GraduationProject.API.DAL.Models.IdentityModels
         [Required]
         [MaxLength(14)]
         [MinLength(14)]
-        //unique
         
         public string NationalId { get; set; }
 

@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using GraduationProject.API.DAL.Models.ApartmentModels;
+using GraduationProject.API.DAL.Models.IdentityModels;
 using GraduationProject.API.DAL.Models.Sanaie;
 using GraduationProject.API.PL.DTOs.ApartmentsDTO;
+using GraduationProject.API.PL.DTOs.ApplicationUserDTOs;
 using GraduationProject.API.PL.DTOs.DepartmentDTOs;
 
 namespace GraduationProject.API.PL.Mapping
@@ -10,6 +12,8 @@ namespace GraduationProject.API.PL.Mapping
     {
         public Applicationprofile(IConfiguration configuration)
         {
+            CreateMap<RegisterDTO,ApplicationUser>().ReverseMap();
+
             CreateMap<Apartment, ApartmentDTO>()
                 .ForMember(p => p.BaseImageUrl, options => options.MapFrom(s => $"{configuration["BaseURL"]}ApartmentImages/{s.BaseImage}"));
 

@@ -45,6 +45,6 @@ namespace GraduationProject.API.PL.DTOs.ApplicationUserDTOs
         [Required(ErrorMessage = "Role is required")]
         public string Role { get; set; }
 
-        public int? DepartmentId { get; set; }
+        public int? DepartmentId { get; set; } = null;
     }
 }
